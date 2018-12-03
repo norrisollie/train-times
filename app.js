@@ -59,7 +59,9 @@ const nearestStationsHandler = (data) => {
 
 	console.log(nearest_data);
 
+    var xxx = document.querySelector("body")
 
+    appendElements(nearest_data, xxx)
 
 }
 
@@ -72,9 +74,13 @@ const createElements = (type, className, content) => {
 	return element
 }
 
-const appendElements = (container) => {
+const appendElements = (array, container) => {
 
-	container
+    array.map((data, index) => {
+
+        container.appendChild(data);
+
+    });
 
 }
 
