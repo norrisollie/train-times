@@ -40,7 +40,6 @@ const fetchData = (url, callback) => {
         callback(data);
     });
 
-
 }
 
 const nearestStationsHandler = (data) => {
@@ -53,23 +52,43 @@ const nearestStationsHandler = (data) => {
 		let station_code = data.station_code;
 		let station_distance = (data.distance * 0.001).toFixed(2) + "km";
 
-		return createElements("div", "station", station_name);
+		return createElements("div", "station", "station", station_name, station_code);
 
 	});
 
-	console.log(nearest_data);
+	// console.log(nearest_data);
 
-    var xxx = document.querySelector("body")
+    let wrapper = document.getElementById("wrapper");
 
-    appendElements(nearest_data, xxx)
+    appendElements(nearest_data, wrapper);
+
+    createTimetableUrl(station_code);
 
 }
 
-const createElements = (type, className, content) => {
+const createElements = (tag, className, type, content, stationCode) => {
 
-		let element = document.createElement(type)
-			element.classList.add(className)
-			element.innerHTML = content
+		let element = document.createElement(tag)
+			element.classList.add(className);
+
+            switch(type) {
+
+                case "station":
+                
+                    element.innerHTML = content;
+                    element.dataset.stationCode = stationCode;
+
+                break;
+
+                // case "":
+                // break;
+                // case "":
+                // break;
+                // default:
+                // break;
+
+
+            }
 
 	return element
 }
