@@ -5,3 +5,8 @@ body {
 	font-weight: 600;
 	-webkit-font-smoothing: antialiased;
 }
+
+.station-timetable {
+	height: 100px;
+	background-color: #000;
+}

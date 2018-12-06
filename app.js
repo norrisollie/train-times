@@ -38,59 +38,96 @@ const fetchData = (url, callback) => {
 
     fetch(url).then(response => response.json()).then(data => {
         callback(data);
-    });
+    }).catch((error => {
+        console.error("error", error);
+    }));
 
 }
 
 const nearestStationsHandler = (data) => {
 
-	let numberOfStations = data.member.length;
+    let stations_array = [];
+    let station_element
+    let station_name_element
+    let station_timetable_element
+    let station_code_array = [];
+    let data_name
+    let data_code
+    let data_lat
+    let data_lon
 
-	let nearest_data = data.member.map((data, index) => {
+    let nearest_data = data.member.map((data, index) => {
 
-		let station_name = data.name;
-		let station_code = data.station_code;
-		let station_distance = (data.distance * 0.001).toFixed(2) + "km";
+        // console.log(data);
 
-		return createElements("div", "station", "station", station_name, station_code);
+        station_element = createElements("div", "station");
+        station_name_element = createElements("div", "station-name");
+        station_timetable_element = createElements("div", "station-timetable");
 
-	});
+        station_element.appendChild(station_name_element);
+        station_element.appendChild(station_timetable_element);
 
-	// console.log(nearest_data);
+        data_name = data.name;
+        data_code = data.station_code;
+        data_lat = data.latitude;
+        data_lon = data.longitude;
+
+        station_name_element.innerHTML = data_name;
+        station_element.dataset.stationCode = data_code;
+
+        stations_array.push(station_element)
+
+        // console.log(station_element)
+
+        // console.log(data_name);
+        // console.log(data_code);
+        // console.log(data_lat);
+        // console.log(data_lon);
+
+        return stations_array
+
+    });
+
+    console.log(stations_array);
 
     let wrapper = document.getElementById("wrapper");
 
-    appendElements(nearest_data, wrapper);
+    appendElements(stations_array, wrapper);
 
-    createTimetableUrl(station_code);
+    createTimetableUrl(station_code)
 
 }
 
-const createElements = (tag, className, type, content, stationCode) => {
+const createElements = (tag, className) => {
 
-		let element = document.createElement(tag)
-			element.classList.add(className);
+    let element = document.createElement(tag)
+    element.classList.add(className);
 
-            switch(type) {
+    return element
+}
 
-                case "station":
-                
-                    element.innerHTML = content;
-                    element.dataset.stationCode = stationCode;
-
-                break;
-
-                // case "":
-                // break;
-                // case "":
-                // break;
-                // default:
-                // break;
+const createTimetableUrl = (stationCodeArray) => {
 
 
-            }
 
-	return element
+    let app_id = "07d9fdf7";
+    let app_key = "a4ec22d05f193c140cac612cd5a8f3f4";
+    let timetable_url = "https://transportapi.com/v3/uk/train/station/" + stationCode + "/live.json?app_id=" + app_id + "&app_key=" + app_key + "&darwin=false&train_status=passenger"
+
+    console.log(stationCodeArray)
+
+    // fetchData(timetable_url, timetableHandler)
+
+
+}
+
+const timetableHandler = (data) => {
+
+    console.log(data);
+
+
+
+
 }
 
 const appendElements = (array, container) => {
