@@ -1,4 +1,5 @@
 "use strict"
+
 const getUserLocation = () => {
 
     const success = (position) => {
@@ -26,8 +27,8 @@ const getUserLocation = () => {
 
 const findNearestStations = (lat, lon) => {
 
-    let app_id = "07d9fdf7";
-    let app_key = "a4ec22d05f193c140cac612cd5a8f3f4";
+    let app_id = "0dd7f0c3";
+    let app_key = "21cc24a8e4686b17209f36ec54ca31e9";
     let nearest_url = "https://transportapi.com/v3/uk/places.json?app_id=" + app_id + "&app_key=" + app_key + "&lat=" + lat + "&lon=" + lon + "&type=train_station";
 
     fetchData(nearest_url, nearestStationsHandler)
@@ -74,6 +75,7 @@ const nearestStationsHandler = (data) => {
 
         station_name_element.innerHTML = data_name;
         station_element.dataset.stationCode = data_code;
+        station_timetable_element.dataset.stationCode = data_code;
 
         stations_array.push(station_element);
         station_code_array.push(data_code);
@@ -116,8 +118,8 @@ const createTimetableUrl = (stationCodeArray) => {
 
     stationCodeArray.map((stationCode, index) => {
 
-        let app_id = "07d9fdf7";
-        let app_key = "a4ec22d05f193c140cac612cd5a8f3f4";
+        let app_id = "0dd7f0c3";
+        let app_key = "21cc24a8e4686b17209f36ec54ca31e9";
         let timetable_url = "https://transportapi.com/v3/uk/train/station/" + stationCode + "/live.json?app_id=" + app_id + "&app_key=" + app_key + "&darwin=false&train_status=passenger"
 
 
@@ -132,6 +134,10 @@ const timetableHandler = (data) => {
     let station_name = data.station_name
     let departures_all = data.departures.all
 
+    console.log(data)
+
+    let station_timetable = document.querySelectorAll(".station-timetable");
+
     departures_all.map((departure, index) => {
 
         let aimed_departure_time = departure.aimed_departure_time;
@@ -141,47 +147,122 @@ const timetableHandler = (data) => {
         let platform_number = departure.platform;
         let service_timetable = departure.service_timetable.id;
         let service_status = departure.status;
+        let train_uid = departure.train_uid;
 
-        console.log(aimed_departure_time);
-        console.log(destination_name);
-        console.log(expected_departure_time);
-        console.log(operator_name);
-        console.log(platform_number);
-        console.log(service_timetable);
-        console.log(service_status);
+        if (platform_number === null) {
+            platform_number = "n/a";
+        }
 
-        let service_element = createElements("div", "service");
+        if (expected_departure_time !== aimed_departure_time) {
+            expected_departure_time = "exp " + expected_departure_time
+        }
 
-        let station_timetable_elements = document.querySelectorAll(".station-timetable");
+        if (expected_departure_time === aimed_departure_time && service_status !== "DELAYED") {
+            expected_departure_time = "On time";
+        }
 
-        station_timetable_elements[0].appendChild(service_element)
+        if (service_status === "EARLY" || service_status === "ON TIME") {
+            service_status = "On Time";
+        } else if (service_status === "LATE") {
+            service_status = "Delayed"
+        }
 
-        // console.log(departure.aimed_arrival_time);
-        // console.log(departure.aimed_departure_time);
-        // console.log(departure.aimed_pass_time);
-        // console.log(departure.best_arrival_estimate_mins);
-        // console.log(departure.best_departure_estimate_mins);
-        // console.log(departure.category);
-        // console.log(departure.destination_name);
-        // console.log(departure.expected_arrival_time);
-        // console.log(departure.expected_departure_time);
-        // console.log(departure.mode);
-        // console.log(departure.operator);
-        // console.log(departure.operator_name );
-        // console.log(departure.origin_name);
-        // console.log(departure.platform);
-        // console.log(departure.service);
-        // console.log(departure.service_timetable);
-        // console.log(departure.source);
-        // console.log(departure.status );
-        // console.log(departure.train_uid);
+        let template = "<div class='service' data-train-id='" + train_uid + "'><div class='expected-aimed-departure-time'><span class='aimed-departure-time'>" + aimed_departure_time + "</span><span class='expected-depart-time'>" + expected_departure_time + "</span></div>" +
+            "<div class='destination-name'>" + destination_name + "</div>" +
+            "<div class='platform-number'>Platform " + platform_number + "</div>" +
+            "<div class='operator-name'>Operated by " + operator_name + "</div></div>";
 
+        let currentWrapper = [...station_timetable].find((wrapper) => wrapper.dataset.stationCode === station_code);
+        let serviceBoxFragment = document.createRange().createContextualFragment(template);
+
+        currentWrapper.appendChild(serviceBoxFragment);
+
+        let serviceWrapper = document.querySelectorAll(".service");
+
+        for (let i = 0; i < serviceWrapper.length; i++) {
+
+            serviceWrapper[i].addEventListener("click", serviceClickHandler);
+
+        }
+
+
+    });
+}
+
+const serviceClickHandler = (e) => {
+
+    let targetStationCode = e.currentTarget.parentNode.dataset.stationCode
+    let targetTrainUID = e.currentTarget.dataset.trainId
+
+    let app_id = "0dd7f0c3";
+    let app_key = "21cc24a8e4686b17209f36ec54ca31e9";
+    let service_url = "https://transportapi.com/v3/uk/train/service/train_uid:" + targetTrainUID + "///timetable.json?app_id=" + app_id + "&app_key=" + app_key + "&darwin=false&live=false";
+
+    fetchData(service_url, serviceInfoHandler);
+
+}
+
+const serviceInfoHandler = (data) => {
+
+    console.log(data)
+
+    console.log("category", data.category)
+    console.log("date", data.date)
+    console.log("destination_name", data.destination_name)
+    console.log("headcode", data.headcode)
+    console.log("mode", data.mode)
+    console.log("operator", data.operator)
+    console.log("operator_name", data.operator_name)
+    console.log("origin_name", data.origin_name)
+    console.log("request_time", data.request_time)
+    console.log("service", data.service)
+    console.log("stop_of_interest", data.stop_of_interest)
+    console.log("stops", data.stops)
+    console.log("time_of_day", data.time_of_day)
+    console.log("toc", data.toc)
+    console.log("train_status", data.train_status)
+
+
+    let template;
+
+    let fixedWrapper = document.getElementById("fixed-wrapper");
+    let innerWrapper = document.getElementById("inner-wrapper");
+    let mapContainer = document.getElementById("map-container");
+
+    data.stops.map((stop, index) => {
+
+        let station_name = stop.station_name;
+        let station_code = stop.station_code;
+        let station_platform = stop.platform;
+        let station_aimed_departure_time = stop.aimed_departure_time;
+
+        let template = "<div class='stop'>" +
+            "<div class='stop-platform'><span class='route-station-name'>" + station_name + "</span><span class='route-station-aimed-departure'>" + station_aimed_departure_time + "</span></div>" +
+            "</div>";
+
+    mapContainer.innerHTML += template;
+            
     });
 
 
 
 
+
+
+
+
+
+
+
+
+
+    fixedWrapper.style.opacity = "1";
+    fixedWrapper.style.pointerEvents = "all";
+
+
+
 }
+
 
 const appendElements = (array, container) => {
 
